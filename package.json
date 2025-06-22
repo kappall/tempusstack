@@ -1,0 +1,25 @@
+{
+  "name": "tempusstack",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "bin": {
+    "tempusstack": "./bin/tempusstack.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^14.0.0",
+    "dockerode": "^4.0.7",
+    "yaml": "^2.8.0"
+  },
+  "devDependencies": {
+    "jest": "^30.0.2"
+  }
+}
