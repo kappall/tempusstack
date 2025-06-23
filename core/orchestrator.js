@@ -3,12 +3,45 @@ const Docker = require("dockerode");
 
 const docker = new Docker();
 
+
+async function getTempusstackContainers() {
+    const containers = await docker.listContainers({all: true});
+    return containers.filter( c=> 
+        c.Names.some(name => name.startsWith('/tempusstack_'))
+    );
+}
+
+async function stopAndRemoveContainer(containerId, serviceName) {
+    try {
+        const container = docker.getContainer(containerId);
+        const inspectData = await container.inspect();
+        
+        if(inspectData.State.Running) {
+            console.log(chalk.yellow(`  Stopping container "${serviceName}" (${containerId.substring(0, 12)})...`))
+            await container.stop();
+            console.log(chalk.green(`   Container "${serviceName}" stopped.`));
+        } else {
+            console.log(chalk.grey(`   Container "${serviceName}" (${containerId.substring(0, 12)}) not running, skipping the stop.`));
+        }
+
+        console.log(chalk.yellow(`  Removing container "${serviceName}" (${containerId.substring(0, 12)})...`));
+        await container.remove();
+        console.log(chalk.green(`   Container "${serviceName}" removed.`));
+        return true;
+    } catch (error) {
+        console.error(chalk.red(`   Error removing container "${serviceName}" (${containerId.substring(0, 12)}):`))
+        console.error(chalk.red(`       ${error.message || error}`));
+        return false;
+    }
+}
+
 async function up(config, detached = false) {
   console.log(
     chalk.green("Starting the services defined in tempusstack.yaml...\n")
   );
 
   const startedContainerIds = [];
+  startFailed = false;
 
   for (const [name, cfg] of Object.entries(config.services || {})) {
     const containerName = `tempusstack_${name}`;
@@ -95,14 +128,39 @@ async function up(config, detached = false) {
       console.error(chalk.red(`   Error starting service "${name}":`));
       console.error(chalk.red(`       ${error.message || error}`));
       console.log("");
+      startFailed = true;
+      break;
     }
+  }
+  if (startFailed) {
+      console.error(chalk.red(`One or more services failed to start. Cleaning...`));
+      await down();
+      throw new Error('Start of stack failed, check errors above');
+
   }
   if (detached) {
     console.log(chalk.green("All services have been started in backgound."));
-    console.log(chalk.grey("Use `tempusstack down` to stop and remove them.")); // TODO: tempusstack down
+    console.log(chalk.grey("Use `tempusstack down` to stop and remove them."));
   }
 
   return startedContainerIds;
 }
 
-module.exports = { up };
+async function down() {
+  console.log(chalk.green('Stopping and removing tempusstack services...\n'));
+
+  const tempusstackContainers = await getTempusstackContainers();
+
+  if(tempusstackContainers.length === 0) {
+    console.log(chalk.yellow('No temposstack container found'));
+    return;
+  }
+
+  for (const c of tempusstackContainers) {
+    const serviceName = c.Names[0].replace('/tempusstack_','');
+    await stopAndRemoveContainer(c.Id, serviceName);
+  }
+  console.log(chalk.green('\nAll tempusstack containers stopped and removed.'));
+}
+
+module.exports = { up, down };
