@@ -16,7 +16,7 @@ module.exports = {
             `  Container "${containerName}" already running. Skipping start`
           )
         );
-        return existingContainer.id;
+        return inspectData.id;
       } else {
         console.log(
           chalk.yellow(

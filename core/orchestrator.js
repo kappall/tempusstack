@@ -59,7 +59,7 @@ async function down() {
 
   for (const c of tempusstackContainers) {
     const serviceName = c.Names[0].replace('/tempusstack_','');
-    await stopAndRemoveContainer(c.Id, serviceName);
+    await stopAndRemoveContainer(c.Id, serviceName, docker);
   }
   console.log(chalk.green('\nAll tempusstack containers stopped and removed.'));
 }
