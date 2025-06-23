@@ -1,5 +1,13 @@
+# tempusstack.yaml - example config file
 services:
-  my-api:
+  db:
+    image: postgres:15
+    port: 5432
+    env:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+  
+  mock-api:
     type: mock
     file: ./mock.json
     port: 3001

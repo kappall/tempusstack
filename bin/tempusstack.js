@@ -4,6 +4,8 @@ const { Command } = require('commander');
 const chalk = require('chalk');
 const { parseConfig } = require('../core/configParser');
 const { up, down, getTempusstackContainers } = require('../core/orchestrator');
+const fs = require('fs');
+const path = require('path');
 
 const program = new Command();
 
@@ -74,6 +76,48 @@ program
       console.log(chalk.green(` - ${c.Names[0]} (${c.Id.substring(0, 12)})`));
       console.log(`   Status: ${c.State} | Ports: ${c.Ports.map(p => `${p.PublicPort}->${p.PrivatePort}`).join(', ')}`);
     }
+  });
+
+program
+  .command('init')
+  .description('Create an example tempusstack.yaml file in the current directory')
+  .action(() => {
+    const yamlPath = path.resolve(process.cwd(), 'tempusstack.yaml');
+    const mockPath = path.resolve(process.cwd(), 'mock.json');
+
+    if (fs.existsSync(yamlPath)) {
+      console.log(chalk.red('Error: tempusstack.yaml already exists. Aborting'));
+      process.exit(1);
+    }
+
+    const example = `# tempusstack.yaml - example config file
+services:
+  db:
+    image: postgres:15
+    port: 5432
+    env:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+  
+  mock-api:
+    type: mock
+    file: ./mock.json
+    port: 3001
+`;
+
+    const exampleMock = {
+      "/api/status": { "status": "ok", "timestamp": new Date().toISOString()},
+      "/api/user": { "id": 1, "name": "Tempus Tester", "role": "admin"}
+    };
+
+    fs.writeFileSync(yamlPath,example);
+    console.log(chalk.green('tempusstack.yaml created.'));
+
+    if(!fs.existsSync(mockPath)) {
+      fs.writeFileSync(mockPath,JSON.stringify(exampleMock,null,2));
+      console.log(chalk.green('mock.json created.'));
+    }
+
   });
 
 program.parse(process.argv);

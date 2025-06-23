@@ -1,0 +1,11 @@
+{
+  "/api/status": {
+    "status": "ok",
+    "timestamp": "2025-06-23T13:57:38.177Z"
+  },
+  "/api/user": {
+    "id": 1,
+    "name": "Tempus Tester",
+    "role": "admin"
+  }
+}
