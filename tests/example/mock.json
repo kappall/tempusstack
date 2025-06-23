@@ -1,0 +1,4 @@
+{
+  "/api/status": { "status": "ok", "uptime": "12345s" },
+  "/api/user": { "id": 1, "name": "Kappa" }
+}

@@ -9,3 +9,8 @@ coverage/
 # Editor specific (if any)
 .vscode/
 .idea/
+
+*.log
+*.pid
+docker-volume-*
+tempusstack-volume-*

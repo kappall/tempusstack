@@ -1,5 +1,6 @@
 const chalk = require("chalk");
 const Docker = require("dockerode");
+const { loadHandler } = require("./configParser")
 
 const docker = new Docker();
 
@@ -44,90 +45,22 @@ async function up(config, detached = false) {
   startFailed = false;
 
   for (const [name, cfg] of Object.entries(config.services || {})) {
-    const containerName = `tempusstack_${name}`;
-    console.log(chalk.blue(`- Startinng Service: ${name}`));
-    console.log(`  image: ${cfg.image}`);
-    console.log(`  port: ${cfg.port}`);
+    const type = cfg.type || 'docker';
 
+    let handler;
     try {
-      let existingContainer;
-      try {
-        existingContainer = await docker.getContainer(containerName);
-        const inspectData = await existingContainer.inspect();
-        if (inspectData.State.Running) {
-          console.log(
-            chalk.yellow(
-              `  Container "${containerName}" already running. Skippinf start`
-            )
-          );
-          startedContainerIds.push(existingContainer.id);
-          continue;
-        } else {
-          console.log(
-            chalk.yellow(
-              `  Container "${containerName}" already exists but not running. Removing to recreate.`
-            )
-          );
-          await existingContainer.remove({ force: true });
-        }
-      } catch (e) {
-        // container does not exsist. proceed to create
-      }
-      console.log(
-        chalk.yellow(`  Checking and pulling the image ${cfg.image}...`)
-      );
-
-      // TODO: progress bar
-      await new Promise((resolve, reject) => {
-        docker.pull(cfg.image, (err, stream) => {
-          if (err) return reject(err);
-          docker.modem.followProgress(stream, (err, res) =>
-            err ? reject(err) : resolve(res)
-          );
-        });
-      });
-      console.log(chalk.green(`   Image ${cfg.image} ready.`));
-
-      const containerOptions = {
-        image: cfg.image,
-        name: containerName,
-        ExposedPorts: {},
-        HostConfig: {
-          PortBindings: {},
-          RestartPolicy: { Name: "no" },
-        },
-        Env: Object.entries(cfg.env || {}).map(
-          ([key, value]) => `${key}=${value}`
-        ),
-      };
-
-      if (cfg.port) {
-        const protocol = "tcp";
-        containerOptions.ExposedPorts[`${cfg.port}/${protocol}`] = {};
-        containerOptions.HostConfig.PortBindings[`${cfg.port}/${protocol}`] = [
-          { HostPort: String(cfg.port) },
-        ];
-      }
-
-      console.log(chalk.yellow(`  Creating the container for ${name}...`));
-      const container = await docker.createContainer(containerOptions);
-      console.log(
-        chalk.green(`   Container "${container.id.substring(0, 12)}" created.`)
-      );
-      startedContainerIds.push(container.id);
-
-      console.log(chalk.yellow(`  Starting the container for ${name}...`));
-      await container.start();
-      console.log(
-        chalk.green(
-          `   Service "${name}" started on port ${cfg.port || "not mapped"}!`
-        )
-      );
-      console.log("");
+      handler = loadHandler(type);
     } catch (error) {
-      console.error(chalk.red(`   Error starting service "${name}":`));
-      console.error(chalk.red(`       ${error.message || error}`));
-      console.log("");
+      console.log(chalk.red(`   Cannot load handler for type '${type}': ${error.message || error}`));
+      startFailed = true;
+      break;
+    }
+    
+    try {
+      const containerId = await handler.run(docker, name, cfg);
+      if (containerId) startedContainerIds.push(containerId);
+    } catch (error) {
+      console.log(chalk.red(`   Error starting service '${name}': ${error.message || error}`));
       startFailed = true;
       break;
     }

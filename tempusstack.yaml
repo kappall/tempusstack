@@ -1,11 +1,5 @@
 services:
-  postgres:
-    image: postgres:15
-    port: 5432
-    env:
-      POSTGRES_USER: dev
-      POSTGRES_PASSWORD: dev
-
-  redis:
-    image: redis
-    port: 6379
+  my-api:
+    type: mock
+    file: ./mock.json
+    port: 3001
