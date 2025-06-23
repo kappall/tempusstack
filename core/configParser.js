@@ -11,8 +11,8 @@ function loadHandler(type) {
   return require(pluginPath);
 }
 
-function parseConfig() {
-  const configPath = path.resolve(process.cwd(), 'tempusstack.yaml');
+function parseConfig(filepath) {
+  const configPath = filepath || path.resolve(process.cwd(), 'tempusstack.yaml');
   const file = fs.readFileSync(configPath, 'utf8');
   parsedYaml = yaml.parse(file);
   validateConfig(parsedYaml);

@@ -1,40 +1,9 @@
 const chalk = require("chalk");
 const Docker = require("dockerode");
 const { loadHandler } = require("./configParser")
+const { getTempusstackContainers, stopAndRemoveContainer } = require('./utils');
 
 const docker = new Docker();
-
-
-async function getTempusstackContainers() {
-    const containers = await docker.listContainers({all: true});
-    return containers.filter( c=> 
-        c.Names.some(name => name.startsWith('/tempusstack_'))
-    );
-}
-
-async function stopAndRemoveContainer(containerId, serviceName) {
-    try {
-        const container = docker.getContainer(containerId);
-        const inspectData = await container.inspect();
-        
-        if(inspectData.State.Running) {
-            console.log(chalk.yellow(`  Stopping container "${serviceName}" (${containerId.substring(0, 12)})...`))
-            await container.stop();
-            console.log(chalk.green(`   Container "${serviceName}" stopped.`));
-        } else {
-            console.log(chalk.grey(`   Container "${serviceName}" (${containerId.substring(0, 12)}) not running, skipping the stop.`));
-        }
-
-        console.log(chalk.yellow(`  Removing container "${serviceName}" (${containerId.substring(0, 12)})...`));
-        await container.remove();
-        console.log(chalk.green(`   Container "${serviceName}" removed.`));
-        return true;
-    } catch (error) {
-        console.error(chalk.red(`   Error removing container "${serviceName}" (${containerId.substring(0, 12)}):`))
-        console.error(chalk.red(`       ${error.message || error}`));
-        return false;
-    }
-}
 
 async function up(config, detached = false) {
   console.log(
@@ -82,7 +51,7 @@ async function up(config, detached = false) {
 async function down() {
   console.log(chalk.green('Stopping and removing tempusstack services...\n'));
 
-  const tempusstackContainers = await getTempusstackContainers();
+  const tempusstackContainers = await getTempusstackContainers(docker);
 
   if(tempusstackContainers.length === 0) {
     return;
@@ -95,4 +64,4 @@ async function down() {
   console.log(chalk.green('\nAll tempusstack containers stopped and removed.'));
 }
 
-module.exports = { up, down, getTempusstackContainers };
+module.exports = { up, down };
