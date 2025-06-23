@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest tests/unit",
-    "test:e2e": "jest tests/integration"
+    "test": "jest",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration"
   },
   "bin": {
     "tempusstack": "./bin/tempusstack.js"

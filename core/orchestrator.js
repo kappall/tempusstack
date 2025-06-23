@@ -3,6 +3,7 @@ const Docker = require("dockerode");
 const { loadHandler } = require("./configParser")
 const { getTempusstackContainers, stopAndRemoveContainer } = require('./utils');
 
+
 const docker = new Docker();
 
 async function up(config, detached = false) {
@@ -15,7 +16,6 @@ async function up(config, detached = false) {
 
   for (const [name, cfg] of Object.entries(config.services || {})) {
     const type = cfg.type || 'docker';
-
     let handler;
     try {
       handler = loadHandler(type);
