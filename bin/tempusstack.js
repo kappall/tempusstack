@@ -3,7 +3,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const { parseConfig } = require('../core/configParser');
-const { up, down } = require('../core/orchestrator');
+const { up, down, getTempusstackContainers } = require('../core/orchestrator');
 
 const program = new Command();
 
@@ -60,5 +60,20 @@ program
         process.exit(1);
     }
   })
+
+program
+  .command('status')
+  .description('List active tempusstack containers')
+  .action(async () => {
+    const containers = await getTempusstackContainers();
+    if (!containers.length) {
+      console.log(chalk.yellow('No tempusstack container are running'));
+      return;
+    }
+    for (const c of containers) {
+      console.log(chalk.green(` - ${c.Names[0]} (${c.Id.substring(0, 12)})`));
+      console.log(`   Status: ${c.State} | Ports: ${c.Ports.map(p => `${p.PublicPort}->${p.PrivatePort}`).join(', ')}`);
+    }
+  });
 
 program.parse(process.argv);

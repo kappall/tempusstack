@@ -162,4 +162,4 @@ async function down() {
   console.log(chalk.green('\nAll tempusstack containers stopped and removed.'));
 }
 
-module.exports = { up, down };
+module.exports = { up, down, getTempusstackContainers };
