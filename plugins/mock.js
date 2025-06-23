@@ -1,6 +1,7 @@
 const path = require("path");
 const chalk = require("chalk");
 const fs = require("fs");
+const { pullImageWithRetry } = require('../core/utils')
 
 module.exports = {
   run: async (docker, name, cfg) => {
@@ -40,15 +41,7 @@ module.exports = {
       // Container doesn't exist, continue
     }
 
-    console.log(chalk.yellow(`  Pulling image ${image}...`));
-    await new Promise((resolve, reject) => {
-      docker.pull(image, (err, stream) => {
-        if (err) return reject(err);
-        docker.modem.followProgress(stream, (err, res) =>
-          err ? reject(err) : resolve(res)
-        );
-      });
-    });
+    pullImageWithRetry(docker, image);
 
     // Create a simple HTTP server script
     const serverScript = `

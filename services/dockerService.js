@@ -1,4 +1,5 @@
 const chalk = require("chalk");
+const { pullImageWithRetry } = require('../core/utils');
 
 module.exports = {
   run: async (docker, name, cfg) => {
@@ -33,15 +34,7 @@ module.exports = {
     );
 
     // TODO: progress bar
-    await new Promise((resolve, reject) => {
-      docker.pull(cfg.image, (err, stream) => {
-        if (err) return reject(err);
-        docker.modem.followProgress(stream, (err, res) =>
-          err ? reject(err) : resolve(res)
-        );
-      });
-    });
-    console.log(chalk.green(`   Image ${cfg.image} ready.`));
+    pullImageWithRetry(docker,cfg.image);
 
     const container = await docker.createContainer({
       Image: cfg.image,
