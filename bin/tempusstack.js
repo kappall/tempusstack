@@ -6,6 +6,7 @@ const { parseConfig } = require('../core/configParser');
 const { up, down, getTempusstackContainers } = require('../core/orchestrator');
 const fs = require('fs');
 const path = require('path');
+const { argv } = require('process');
 
 const program = new Command();
 
@@ -18,9 +19,11 @@ program
   .command('up')
   .description('Start the services defined in tempusstack.yaml')
   .option('-d --detached', 'Start all services in background')
+  .option('--config <path>', 'Specify custom config file paths')
   .action(async (options) => {
     let isShuttingDown = false;
-    const config = parseConfig();
+    let filePath = options.config;
+    const config = parseConfig(filePath);
 
     const sigintHandler = async () => {
       if (isShuttingDown) return;
