@@ -12,7 +12,7 @@ async function up(config, detached = false) {
   );
 
   const startedContainerIds = [];
-  startFailed = false;
+  let startFailed = false;
 
   for (const [name, cfg] of Object.entries(config.services || {})) {
     const type = cfg.type || 'docker';

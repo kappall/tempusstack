@@ -3,7 +3,7 @@ const chalk = require("chalk");
 module.exports = {
   run: async (docker, name, cfg) => {
     const containerName = `tempusstack_${name}`;
-    console.log(chalk.blue(`- Startinng Service: ${name}`));
+    console.log(chalk.blue(`- Starting Service: ${name}`));
     console.log(`  image: ${cfg.image}`);
     console.log(`  port: ${cfg.port}`);
     let existingContainer;
@@ -44,17 +44,16 @@ module.exports = {
     console.log(chalk.green(`   Image ${cfg.image} ready.`));
 
     const container = await docker.createContainer({
-      image: cfg.image,
+      Image: cfg.image,
       name: containerName,
-      ExposedPorts: { [`${cfg.port}/tcp`]: {}},
+      ExposedPorts: cfg.port ? { [`${cfg.port}/tcp`]: {} } : undefined,
       HostConfig: {
-        PortBindings: { [`${cfg.port}/tcp`]: [{ HostPort: String(cfg.port) }] },
+        PortBindings: cfg.port ? { [`${cfg.port}/tcp`]: [{ HostPort: String(cfg.port) }] } : undefined,
         RestartPolicy: { Name: "no" },
       },
-      Env: Object.entries(cfg.env || {}).map(
-        ([key, value]) => `${key}=${value}`
-      ),
+      Env: Object.entries(cfg.env || {}).map(([key, value]) => `${key}=${value}`),
     });
+
 
     console.log(
       chalk.green(`   Container "${container.id.substring(0, 12)}" created.`)

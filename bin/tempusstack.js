@@ -23,12 +23,11 @@ program
     const config = parseConfig();
 
     const sigintHandler = async () => {
-        console.log(chalk.gray(`ignoring this Ctrl+c`))
       if (isShuttingDown) return;
 
       isShuttingDown = true;
 
-      console.log(chalk.red('\n\nCtrl+c relevated. Starting cleaning...'));
+      console.log(chalk.red('\n\nCtrl+c detected. Starting cleaning...'));
       try {
         await down()
       } catch (cleanupError) {

@@ -1,8 +1,13 @@
 {
   "name": "tempusstack",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A lightweight Node.js library for Docker container orchestration.",
+  "main": "bin/tempusstack.js",
+  "author": "Karam El labadie ellabadiekaram@gmail.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kappall/tempusstack.git"
+  },
   "scripts": {
     "test": "jest",
     "test:unit": "jest tests/unit",
@@ -11,9 +16,14 @@
   "bin": {
     "tempusstack": "./bin/tempusstack.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "docker",
+    "orchestration",
+    "container",
+    "micro-tool",
+    "dockerode"
+  ],
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "chalk": "^4.1.2",
@@ -23,5 +33,8 @@
   },
   "devDependencies": {
     "jest": "^30.0.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

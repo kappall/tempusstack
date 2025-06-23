@@ -9,10 +9,21 @@ module.exports = {
 
     const mockPath = path.resolve(process.cwd(), cfg.file);
     if (!fs.existsSync(mockPath)) {
-      throw new Error(`File not found: ${mockPath}`);
+      throw new Error(`Mock file not found: ${mockPath}`);
+    }
+
+    // Validate JSON structure
+    try {
+      const mockData = JSON.parse(fs.readFileSync(mockPath, 'utf8'));
+      if (typeof mockData !== 'object') {
+        throw new Error('Mock file must contain a JSON object');
+      }
+    } catch (error) {
+      throw new Error(`Invalid mock file ${cfg.file}: ${error.message}`);
     }
 
     const mountDir = path.dirname(mockPath);
+    const fileName = path.basename(mockPath);
     const image = "node:18-alpine";
 
     try {
@@ -25,7 +36,8 @@ module.exports = {
         console.log(chalk.gray(`  Removing old container '${containerName}'...`));
         await existing.remove({ force: true });
       }
-    } catch (_) {
+    } catch (error) {
+      // Container doesn't exist, continue
     }
 
     console.log(chalk.yellow(`  Pulling image ${image}...`));
@@ -38,10 +50,46 @@ module.exports = {
       });
     });
 
+    // Create a simple HTTP server script
+    const serverScript = `
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+const mockData = JSON.parse(fs.readFileSync('/data/${fileName}', 'utf8'));
+const port = ${containerPort};
+
+const server = http.createServer((req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
+  const response = mockData[req.url];
+  if (response) {
+    res.writeHead(200);
+    res.end(JSON.stringify(response, null, 2));
+  } else {
+    res.writeHead(404);
+    res.end(JSON.stringify({ error: 'Not found', available: Object.keys(mockData) }));
+  }
+});
+
+server.listen(port, '0.0.0.0', () => {
+  console.log(\`Mock server running on port \${port}\`);
+});
+`;
+
     const container = await docker.createContainer({
       Image: image,
       name: containerName,
-      Cmd: ["npx", "http-server", ".", "-p", `${containerPort}`],
+      Cmd: ["node", "-e", serverScript],
       WorkingDir: "/data",
       HostConfig: {
         Binds: [`${mountDir}:/data:ro`],
@@ -54,7 +102,7 @@ module.exports = {
 
     await container.start();
     console.log(chalk.green(`  Mock service '${name}' started on port ${containerPort}`));
-    console.log(chalk.gray(`  Served file: ${cfg.file}`));
+    console.log(chalk.gray(`  Available endpoints: ${Object.keys(JSON.parse(fs.readFileSync(mockPath, 'utf8'))).join(', ')}`));
     return container.id;
   }
 };
