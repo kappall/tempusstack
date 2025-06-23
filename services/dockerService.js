@@ -13,10 +13,10 @@ module.exports = {
       if (inspectData.State.Running) {
         console.log(
           chalk.yellow(
-            `  Container "${containerName}" already running. Skippinf start`
+            `  Container "${containerName}" already running. Skipping start`
           )
         );
-        startedContainerIds.push(existingContainer.id);
+        return existingContainer.id;
       } else {
         console.log(
           chalk.yellow(
