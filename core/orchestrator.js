@@ -152,7 +152,6 @@ async function down() {
   const tempusstackContainers = await getTempusstackContainers();
 
   if(tempusstackContainers.length === 0) {
-    console.log(chalk.yellow('No temposstack container found'));
     return;
   }
 

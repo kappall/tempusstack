@@ -44,9 +44,7 @@ program
           // to keep alive
           setInterval(()=>{}, 1<<30);
       }
-    } catch (error) {
-        console.error(chalk.red(`Error during executions of command 'up': ${error.message || error}`));
-        await down()
+    } catch (_) { // errors already printed
         process.exit(1);
     }
   });
