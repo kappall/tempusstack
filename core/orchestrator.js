@@ -1,7 +1,9 @@
 const chalk = require("chalk");
 const Docker = require("dockerode");
-const { loadHandler } = require("./configParser")
+const { loadHandler } = require("./configParser");
+const stream = require('stream');
 const { getTempusstackContainers, stopAndRemoveContainer } = require('./utils');
+const { stdout, stderr } = require("process");
 
 
 const docker = new Docker();
@@ -65,4 +67,48 @@ async function down(verbose = true) {
   console.log(chalk.green('\nAll tempusstack containers stopped and removed.'));
 }
 
-module.exports = { up, down };
+async function showStatus() {
+  const containers = await getTempusstackContainers(docker);
+  if (!containers.length) {
+    console.log(chalk.yellow('No tempusstack container are running'));
+    return;
+  }
+  for (const c of containers) {
+    console.log(chalk.green(` - ${c.Names[0]} (${c.Id.substring(0, 12)})`));
+    console.log(`   Status: ${c.State} | Ports: ${c.Ports.map(p => `${p.PublicPort}->${p.PrivatePort}`).join(', ')}`);
+  }
+}
+
+async function showLogs(service, follow = false) {
+  const containerName = `tempusstack_${service}`;
+  const container = docker.getContainer(containerName);
+
+  // checking if container exist
+  try {
+    await container.inspect();
+  } catch {
+    throw Error(`Service '${service}' is not running or does not exist.`)
+  }
+
+  const logOpts = {
+    stdout: true,
+    stderr: true,
+    follow,
+    tail: 100
+  };
+
+  if (follow) { //stream
+    const logStream = new stream.PassThrough();
+    logStream.on('data', chunk => process.stdout.write(chunk));
+  
+    const dockerStream = await container.logs(logOpts) //await needed, ignore ide suggestion
+    dockerStream.pipe(logStream);
+    dockerStream.on('end', () => logStream.end());
+  } else { //buffer
+    logOpts.follow = false;
+    const logs = await container.logs(logOpts); //await needed, ignore ide suggestion
+    process.stdout.write(logs);
+  }
+}
+
+module.exports = { up, down, showLogs, showStatus};

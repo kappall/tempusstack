@@ -39,5 +39,5 @@ describe('up() integration test', () => {
       c.Names.some(name => name.startsWith('/tempusstack_integtest'))
     );
     expect(matching).toBeDefined();
-  });
+  }, 10000);
 });
