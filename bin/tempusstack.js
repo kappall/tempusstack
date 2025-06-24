@@ -3,7 +3,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const { parseConfig } = require('../core/configParser');
-const { up, down, showStatus, showLogs } = require('../core/orchestrator');
+const { up, down, showStatus, showLogs, restartService } = require('../core/orchestrator');
 const fs = require('fs');
 const path = require('path');
 
@@ -126,5 +126,18 @@ program
       process.exit(1);
     }
   })
+
+program
+  .command('restart <service>')
+  .description('restart a running tempusstack service')
+  .action(async (service) => {
+    try {
+      await restartService(service);
+    } catch (error) {
+      console.error(chalk.red(`Error restarting service: ${error.message || error}`));
+      process.exit(1);
+    }
+  })
+
 
 program.parse(process.argv);
