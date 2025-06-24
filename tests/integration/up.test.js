@@ -7,6 +7,12 @@ const docker = new Docker();
 const { up, down } = require('../../core/orchestrator');
 const { parseConfig } = require('../../core/configParser');
 
+test('up() with empty services does nothing', async () => {
+  const config = { services: {} };
+  const ids = await up(config, true);
+  expect(ids).toEqual([]);
+});
+
 describe('up() integration test', () => {
   const testYamlPath = path.join(__dirname, 'tempusstack.test.yaml');
 
@@ -40,4 +46,9 @@ describe('up() integration test', () => {
     );
     expect(matching).toBeDefined();
   }, 10000);
+});
+
+test('up() with invalid image triggers cleanup and throws generic error', async () => {
+  const config = { services: { bad: { image: 'nonexistent:image' } } };
+  await expect(up(config, true)).rejects.toThrow(/Start of stack failed/);
 });
