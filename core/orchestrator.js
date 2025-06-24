@@ -3,7 +3,6 @@ const Docker = require("dockerode");
 const { loadHandler } = require("./configParser");
 const stream = require('stream');
 const { getTempusstackContainers, stopAndRemoveContainer } = require('./utils');
-const { stdout, stderr } = require("process");
 
 
 const docker = new Docker();
@@ -64,8 +63,25 @@ async function down(verbose = true) {
     const serviceName = c.Names[0].replace('/tempusstack_','');
     await stopAndRemoveContainer(c.Id, serviceName, docker, verbose);
   }
+
+  await waitForContainersToBeGone();
+
   console.log(chalk.green('\nAll tempusstack containers stopped and removed.'));
 }
+
+async function waitForContainersToBeGone(maxRetries = 10, delayMs = 500) {
+  for (let i = 0; i < maxRetries; ++i) {
+    const containers = await getTempusstackContainers(docker);
+    if (containers.length === 0)
+      return;
+
+    await new Promise(resolve => {setTimeout(resolve, delayMs)});
+  }
+
+  const remainingContainers = await getTempusstackContainers(docker);
+  console.warn(chalk.yellow(`Warning: ${remainingContainers.length} tempusstack containers still visible after cleanup`));
+}
+
 
 async function showStatus() {
   const containers = await getTempusstackContainers(docker);
