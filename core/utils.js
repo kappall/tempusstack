@@ -7,7 +7,7 @@ async function getTempusstackContainers(docker) {
     );
 }
 
-async function stopAndRemoveContainer(containerId, serviceName, docker, verbose) {
+async function stopAndRemoveContainer(containerId, serviceName, docker, verbose = true) {
     try {
         const container = docker.getContainer(containerId);
         const inspectData = await container.inspect();

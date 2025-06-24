@@ -129,10 +129,11 @@ program
 
 program
   .command('restart <service>')
+  .option('-v --verbose', 'Enable verbose output')
   .description('restart a running tempusstack service')
-  .action(async (service) => {
+  .action(async (service, options) => {
     try {
-      await restartService(service);
+      await restartService(service, options.verbose);
     } catch (error) {
       console.error(chalk.red(`Error restarting service: ${error.message || error}`));
       process.exit(1);

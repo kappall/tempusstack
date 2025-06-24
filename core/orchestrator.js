@@ -111,7 +111,7 @@ async function showLogs(service, follow = false) {
   }
 }
 
-async function restartService(service) {
+async function restartService(service, verbose = false) {
   const containerName = `tempusstack_${service}`;
   const container = docker.getContainer(containerName);
 
@@ -121,13 +121,16 @@ async function restartService(service) {
   } catch {
     throw Error(`Service '${service}' is not running or does not exist.`)
   }
-  console.log(chalk.yellow('Restarting service...'))
+  if (verbose)
+    console.log(chalk.yellow('Restarting service...'))
   try {
     await container.restart();
   } catch (error) {
     throw error;
   }
-  console.log(chalk.green('Service restarted'));
+
+  if (verbose)
+    console.log(chalk.green('Service restarted'));
 }
 
 module.exports = { up, down, showLogs, showStatus, restartService};
