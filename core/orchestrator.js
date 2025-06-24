@@ -6,7 +6,7 @@ const { getTempusstackContainers, stopAndRemoveContainer } = require('./utils');
 
 const docker = new Docker();
 
-async function up(config, detached = false) {
+async function up(config, detached = false, verbose = false) {
   console.log(
     chalk.green("Starting the services defined in tempusstack.yaml...\n")
   );
@@ -26,7 +26,7 @@ async function up(config, detached = false) {
     }
     
     try {
-      const containerId = await handler.run(docker, name, cfg);
+      const containerId = await handler.run(docker, name, cfg, verbose);
       if (containerId) startedContainerIds.push(containerId);
     } catch (error) {
       console.log(chalk.red(`   Error starting service '${name}': ${error.message || error}`));
@@ -41,14 +41,15 @@ async function up(config, detached = false) {
 
   }
   if (detached) {
-    console.log(chalk.green("All services have been started in backgound."));
+    if (verbose)
+      console.log(chalk.green("All services have been started in backgound."));
     console.log(chalk.grey("Use `tempusstack down` to stop and remove them."));
   }
 
   return startedContainerIds;
 }
 
-async function down() {
+async function down(verbose = true) {
   console.log(chalk.green('Stopping and removing tempusstack services...\n'));
 
   const tempusstackContainers = await getTempusstackContainers(docker);
@@ -59,7 +60,7 @@ async function down() {
 
   for (const c of tempusstackContainers) {
     const serviceName = c.Names[0].replace('/tempusstack_','');
-    await stopAndRemoveContainer(c.Id, serviceName, docker);
+    await stopAndRemoveContainer(c.Id, serviceName, docker, verbose);
   }
   console.log(chalk.green('\nAll tempusstack containers stopped and removed.'));
 }

@@ -2,36 +2,30 @@ const chalk = require("chalk");
 const { pullImageWithRetry } = require('../core/utils');
 
 module.exports = {
-  run: async (docker, name, cfg) => {
+  run: async (docker, name, cfg, verbose) => {
     const containerName = `tempusstack_${name}`;
-    console.log(chalk.blue(`- Starting Service: ${name}`));
-    console.log(`  image: ${cfg.image}`);
-    console.log(`  port: ${cfg.port}`);
+    if (verbose){
+      console.log(chalk.blue(`- Starting Service: ${name}`));
+      console.log(`  image: ${cfg.image}`);
+      console.log(`  port: ${cfg.port}`);
+    }
     let existingContainer;
     try {
       existingContainer = await docker.getContainer(containerName);
       const inspectData = await existingContainer.inspect();
       if (inspectData.State.Running) {
-        console.log(
-          chalk.yellow(
-            `  Container "${containerName}" already running. Skipping start`
-          )
-        );
+        if (verbose)
+          console.log(chalk.yellow(`  Container "${containerName}" already running. Skipping start`));
         return inspectData.id;
       } else {
-        console.log(
-          chalk.yellow(
-            `  Container "${containerName}" already exists but not running. Removing to recreate.`
-          )
-        );
+        if (verbose)
+          console.log(chalk.yellow(`  Container "${containerName}" already exists but not running. Removing to recreate.`));
         await existingContainer.remove({ force: true });
       }
     } catch (e) {
       // container does not exsist. proceed to create
     }
-    console.log(
-      chalk.yellow(`  Checking and pulling the image ${cfg.image}...`)
-    );
+    if (verbose)
 
     // TODO: progress bar
     pullImageWithRetry(docker,cfg.image);
@@ -47,18 +41,14 @@ module.exports = {
       Env: Object.entries(cfg.env || {}).map(([key, value]) => `${key}=${value}`),
     });
 
-
-    console.log(
-      chalk.green(`   Container "${container.id.substring(0, 12)}" created.`)
-    );
+    if (verbose)
+      console.log(chalk.green(`   Container "${container.id.substring(0, 12)}" created.`));
 
     await container.start();
-    console.log(
-      chalk.green(
-        `   Service "${name}" started on port ${cfg.port}!`
-      )
-    );
-    console.log("");
+    if (verbose) {
+      console.log(chalk.green(`   Service "${name}" started on port ${cfg.port}!`));
+      console.log("");
+    }
     return container.id;
   }
 };

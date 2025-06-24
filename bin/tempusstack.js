@@ -20,6 +20,7 @@ program
   .description('Start the services defined in tempusstack.yaml')
   .option('-d --detached', 'Start all services in background')
   .option('--config <path>', 'Specify custom config file paths')
+  .option('-v --verbose', 'Enable verbose output')
   .action(async (options) => {
     let isShuttingDown = false;
     let filePath = options.config;
@@ -32,7 +33,7 @@ program
 
       console.log(chalk.red('\n\nCtrl+c detected. Starting cleaning...'));
       try {
-        await down()
+        await down(options.verbose === true)
       } catch (cleanupError) {
         console.error(chalk.red(`Error during cleaning: ${cleanupError.message || cleanupError}`));
       } finally {
@@ -40,7 +41,7 @@ program
       }
     };
     try {
-      await up(config, options.detached);
+      await up(config, options.detached, options.verbose);
       if(!options.detached) {
         process.on('SIGINT',sigintHandler);
           console.log(chalk.blue('\nServices Started. Press Ctrl+c to stop and remove them.'));

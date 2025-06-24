@@ -4,7 +4,7 @@ const fs = require("fs");
 const { pullImageWithRetry } = require('../core/utils')
 
 module.exports = {
-  run: async (docker, name, cfg) => {
+  run: async (docker, name, cfg, verbose = false) => {
     const containerName = `tempusstack_${name}`;
     const containerPort = cfg.port || 3001;
 
@@ -94,8 +94,10 @@ server.listen(port, '0.0.0.0', () => {
     });
 
     await container.start();
-    console.log(chalk.green(`  Mock service '${name}' started on port ${containerPort}`));
-    console.log(chalk.gray(`  Available endpoints: ${Object.keys(JSON.parse(fs.readFileSync(mockPath, 'utf8'))).join(', ')}`));
+    if (verbose) {
+      console.log(chalk.green(`  Mock service '${name}' started on port ${containerPort}`));
+      console.log(chalk.gray(`  Available endpoints: ${Object.keys(JSON.parse(fs.readFileSync(mockPath, 'utf8'))).join(', ')}`));
+    }
     return container.id;
   }
 };
