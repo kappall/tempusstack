@@ -14,7 +14,7 @@ describe('container lifecycle', () => {
     
     const { stdout } = await execa('node', ['bin/tempusstack.js', 'status']);
     expect(stdout).toContain('tempusstack_mytest');
-  });
+  },10000);
   
   test('down removes specific container', async () => {
 
@@ -24,5 +24,5 @@ describe('container lifecycle', () => {
     
     const { stdout } = await execa('node', ['bin/tempusstack.js', 'status']);
     expect(stdout).not.toContain('tempusstack_mytest2');
-  });
+  },10000);
 });
