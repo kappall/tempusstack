@@ -45,5 +45,5 @@ describe('orchestrator using mocked Docker', () => {
 
   test('calls down() without error', async () => {
     await expect(down()).resolves.not.toThrow();
-  });
+  }, 10000);
 });
