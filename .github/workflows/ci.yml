@@ -19,10 +19,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Verify Docker
+      - name: Verify Docker and pull images
         run: |
           docker --version
           docker info
+          docker pull alpine:latest
 
       - name: Install dependencies
         run: npm ci
